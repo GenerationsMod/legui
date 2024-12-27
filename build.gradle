@@ -105,15 +105,24 @@ dependencies {
     deployerJar 'ar.com.synergian:wagon-git:0.3.0'
 }
 
-def publishUrl = System.getProperty("publishUrl") ?: System.getenv("publishUrl") ?: null
-def publishUsername = System.getProperty("publishUsername") ?: System.getenv("publishUsername") ?: null
-def publishPassword = System.getProperty("publishPassword") ?: System.getenv("publishPassword") ?: null
+publishing {
+    repositories {
+        mavenLocal()
+        maven {
+            var releasesRepoUrl = uri("https://maven.generations.gg/releases")
+            var snapshotsRepoUrl = uri("https://maven.generations.gg/snapshots")
+            url = (version.toString().endsWith("SNAPSHOT") || version.toString().startsWith("0")) ? snapshotsRepoUrl : releasesRepoUrl
+            name = "Generations-Repo"
+            credentials {
+                username = project.findProperty("repoLogin")?.toString()
+                password = project.findProperty("repoPassword")?.toString()
+            }
+        }
+    }
 
-uploadArchives {
-    repositories.mavenDeployer {
-        configuration = configurations.deployerJar
-        repository(url: publishUrl) {
-            authentication(userName: publishUsername, password: publishPassword)
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
